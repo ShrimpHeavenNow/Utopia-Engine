@@ -273,6 +273,7 @@ def mainloop():
 mainloop()
 
 #things I'm concerned about:
+#functions in functions in functions...
 #Changing the inventory inside these functions. Will they stick? I need to get my head around global variables.
 #adding what the items do will be interesting. I guess a lot of if/ then stuff.
 #make a function for advancing the timeline. checking against the event and skull days.
