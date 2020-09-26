@@ -10,10 +10,10 @@ health = 6  # Make this a function as well?
 toolbelt = ["Paralysis Wand", "Dowsing rod", "Focus Charm"]
 stores = {"Silver": 0, "Quartz": 0, "Silica": 0, "Gum": 0, "Wax": 0, "Lead": 0}
 # old artifacts = {"Seal of Balance": 0, "Hermetic Mirror": 0, "Void Gate": 0, "Golden Chassis": 0, "Scrying Lens": 0, "Crystal Battery": 0}
-artifacts = ["a butt", "a penis", "a car"]
-activated = ["activated butt"]
+artifacts = []
+activated = []
 # old treasures = {"Ice Plate": 0, "Bracelet of Ios": 0, "Shimmering Moonlace": 0, "Scale of the Infinity Wurm": 0, "The Ancient Record": 0, "The Molten Shard": 0}
-treasures = ["butt treasure"]
+treasures = []
 # DAYS, BABY
 eventDays = [2, 5, 8, 11, 14, 17, 20]
 skullDays = [15, 16, 17, 18, 19, 20, 21, 22]
