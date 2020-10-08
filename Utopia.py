@@ -1,6 +1,6 @@
 import random
+import sys
 
-# In general, UX is horrible. I'll go back and gussie her up once its functioning.
 # text color
 black = lambda text: '\033[0;30m' + text + '\033[0m'
 red = lambda text: '\033[0;31m' + text + '\033[0m'
@@ -11,19 +11,15 @@ magenta = lambda text: '\033[0;35m' + text + '\033[0m'
 cyan = lambda text: '\033[0;36m' + text + '\033[0m'
 white = lambda text: '\033[0;37m' + text + '\033[0m'
 print()
-print(blue(
-    "##     ## ########  #######  ########  ####    ###       ######## ##    ##  ######   #### ##    ## ######## "))
-print(blue(
-    "##     ##    ##    ##     ## ##     ##  ##    ## ##      ##       ###   ## ##    ##   ##  ###   ## ##       "))
-print(
-    blue("##     ##    ##    ##     ## ##     ##  ##   ##   ##     ##       ####  ## ##         ##  ####  ## ##      "))
-print(blue(
-    "##     ##    ##    ##     ## ########   ##  ##     ##    ######   ## ## ## ##   ####  ##  ## ## ## ######   "))
-print(blue(
-    "##     ##    ##    ##     ## ##         ##  #########    ##       ##  #### ##    ##   ##  ##  #### ##       "))
-print(blue("##     ##    ##    ##     ## ##         ##  ##     ##    ##       ##   ### ##    ##   ##  ##   ### ##"))
-print(blue(
-    " #######     ##     #######  ##        #### ##     ##    ######## ##    ##  ######   #### ##    ## ######## "))
+print(blue("""
+    ##     ## ########  #######  ########  ####    ###       ######## ##    ##  ######   #### ##    ## ########
+    ##     ##    ##    ##     ## ##     ##  ##    ## ##      ##       ###   ## ##    ##   ##  ###   ## ##      
+    ##     ##    ##    ##     ## ##     ##  ##   ##   ##     ##       ####  ## ##         ##  ####  ## ##      
+    ##     ##    ##    ##     ## ########   ##  ##     ##    ######   ## ## ## ##   ####  ##  ## ## ## ######  
+    ##     ##    ##    ##     ## ##         ##  #########    ##       ##  #### ##    ##   ##  ##  #### ##      
+    ##     ##    ##    ##     ## ##         ##  ##     ##    ##       ##   ### ##    ##   ##  ##   ### ##
+     #######     ##     #######  ##        #### ##     ##    ######## ##    ##  ######   #### ##    ## ########
+     """))
 print()
 print("This is a digital version of the incredible print and play board game of the same name")
 print("By Nick Hayes.")
@@ -34,19 +30,21 @@ print()
 
 # I feel like defining here is fine until I want to have the ability to start a new game.
 day = 0
-health = 30  # Make this a function as well?
+health = 6  # Make this a function as well?
 # sets inventory to be empty
 toolbelt = ["Paralysis Wand", "Dowsing Rod", "Focus Charm"]
-stores = {"Silver": 0, "Quartz": 0, "Silica": 0, "Gum": 0, "Wax": 0, "Lead": 0}  # make limit of 4
+stores = {"Silver": 0, "Quartz": 3, "Silica": 0, "Gum": 0, "Wax": 0, "Lead": 0}  # make limit of 4
 eventDays = [2, 5, 8, 11, 14, 17, 20]
 skullDays = [15, 16, 17, 18, 19, 20, 21, 22]
 wastebasket = []
 godsHand = 0
+status = "alive"
 
 
 # monster class
 class Monster:
     """Create fightable monsters and their stats"""
+
     def __init__(self, name, rank, spirit, attack, defense):
         self.name = name
         self.rank = rank
@@ -89,7 +87,8 @@ volcanoSpirit = Monster("Volcano Spirit", 5, 1, [1, 2, 3, 4], [6])
 
 
 class Treasure:
-    """Create Treasures,their description and their status"""
+    """Create Treasures, their description and their status"""
+
     def __init__(self, name, description, used):
         self.name = name
         self.description = description
@@ -104,12 +103,13 @@ scaleOfTheInfinityWurm = Treasure("Scale of the Infinity Wurm", "The ebony scale
 theAncientRecord = Treasure("The Ancient Record", "The dusty tome allows you to change one", False)
 theMoltenShard = Treasure("The Molten Shard", "This glowing spike adds 1 to your attack range", False)
 
-treasures = [theMoltenShard, theAncientRecord]
+treasures = []
 
 
 # Artifacts
 class Artifact:
     """Create artifacts and all their parameters"""
+
     def __init__(self, name, activated, component, linked, link_value, description, key_word):
         self.name = name
         self.activated = activated
@@ -121,7 +121,7 @@ class Artifact:
         # can I do casefold(thing.name) where I need to? probably...
 
 
-sealOfBalance = Artifact("Seal of Balance", False, "Quartz", False, 0, "A literal baby seal.", ["seal", "balance"])
+sealOfBalance = Artifact("Seal of Balance", True, "Quartz", True, 80, "A literal baby seal.", ["seal", "balance"])
 hermeticMirror = Artifact("Hermetic Mirror", False, "Wax", False, 0, "A mirror", ["hermetic", "mirror"])
 voidGate = Artifact("Void Gate", False, "Silica", False, 0, "It hurts to look at", ["void", "gate"])
 scryingLens = Artifact("Scrying Lens", False, "Lead", False, 0, "Hey guys, it's scrying its best.", ["scrying", "lens"])
@@ -129,12 +129,13 @@ crystalBattery = Artifact("Crystal Battery", False, "Gum", False, 0, "From Tesla
 goldenChassis = Artifact("Golden Chassis", False, "Silver", False, 0, "A Chassis showered in gold.",
                          ["gold", "golden", "chassis"])
 
-artifacts = [sealOfBalance, voidGate]  # sets artifact inventory
+artifacts = [sealOfBalance, scryingLens]  # sets artifact inventory
 
 
 # Set locations and their loot. I made it so you could easily add more, for some reason.
 class Location:
     """Define locations where treasures, artifacts and components are"""
+
     def __init__(self, number, name, component, artifact, treasure, days_searched, time_advances, encounters, event,
                  explore_attempt):
         self.number = number
@@ -182,6 +183,7 @@ def helper(game_place):
     # link
     # rolling
     # main
+    # utopia
 
 
 def day_advance():
@@ -258,18 +260,19 @@ def encounter(current_location, search_result):
         fight_rolls = [random.randint(1, 6), random.randint(1, 6)]
         print("The Monster rolled a " + str(fight_rolls[0]))
         print("You rolled a " + str(fight_rolls[1]))
-        if fight_rolls[0] in fighter.attack:
+        if fight_rolls[0] in fighter.attack:  # Player hit
             hit_result = get_hit(1)
             if hit_result == "dead":
                 input(
-                    "You're dead")  # Where do I do the scoring funtion? should I keep retuning until I'm in main loop?
+                    "You're dead")
+                return "dead"
             if hit_result == "unconscious":
-                input("you're unconscious")  # kick them back to main loop?
+                input("you're unconscious")
+                return "unconscious"
         else:
-            print("The monster misses")  # make a list with a bunch of fun descriptions and have it choose randomly
-        if fight_rolls[1] in fighter.defense:
-            print(green("You hit the monster! It is slain!"))
-            # make a list with a bunch of fun descriptions and have it choose randomly
+            print("The monster misses")  # TODO: create random flavorful text for hits
+        if fight_rolls[1] in fighter.defense:  # Kill Monster
+            print(green("You hit the monster! It is slain!"))  # Ditto above.
             if fighter.rank == 5 and current_location.Treasure not in treasures:
                 treasures.append(current_location.Treasure)
                 print(
@@ -285,7 +288,7 @@ def encounter(current_location, search_result):
 
 
 def display_table(search_table):
-    """Display table of rolls for combat"""
+    """Display table of rolls for combat and linking"""
     print("-------")
     print("|" + str(search_table[0]) + "|" + str(search_table[1]) + "|" + str(search_table[2]) + "|")
     print("-------")
@@ -294,7 +297,7 @@ def display_table(search_table):
 
 
 def display_activate_table(search_table):
-    """Display table for activation"""
+    """Display table of rolls for activation"""
     print("--- --- --- ---")
     print("|" + str(search_table[0]) + "| |" + str(search_table[1]) + "| |" + str(search_table[2]) + "| |" + str(
         search_table[3]) + "|")
@@ -305,50 +308,84 @@ def display_activate_table(search_table):
 
 
 def rolls(table, type_):
-    """Roll dice and assign them to a table"""
-    placed_roll = False
-    _rolls_ = [random.randint(1, 6), random.randint(1, 6)]
-    print("You've rolled " + str(_rolls_[0]) + " and " + str(_rolls_[1]) + ".")
-
-    # Place First Roll.
-    while not placed_roll:
-        print("Where would you like your first roll, a " + str(_rolls_[0]) + " to be placed?")
-        _roll_Placement_ = input().upper()
-        if _roll_Placement_ in table:
-            _table_place_ = -1
-            for x in table:
-                _table_place_ += 1
-                if x == _roll_Placement_:
-                    print("it was " + str(table[_table_place_]))
-                    table[_table_place_] = _rolls_[0]
-                    print("Now It's " + str(table[_table_place_]))
-                    placed_roll = True
-        elif _roll_Placement_ == "help":
-            helper("rolling")
-        else:
-            print("select an unassigned location")
-    placed_roll = False
-
-    # Place Second Roll
-    if type_ == "search" or type == "link":
+    """Roll dice and assign them to a table. Stop when table is full."""
+    while True:
         display_table(table)
-    if type_ == "activate":
-        display_activate_table(table)
+        placed_roll = False
+        _rolls_ = [random.randint(1, 6), random.randint(1, 6)]
+        print("You've rolled " + str(_rolls_[0]) + " and " + str(_rolls_[1]) + ".")
 
-    while not placed_roll:
-        print("Where would you like your second roll, a " + str(_rolls_[1]) + " to be placed?")
-        _roll_Placement_ = input().upper()
-        if _roll_Placement_ in table:
-            _table_place_ = -1
-            for x in table:
-                _table_place_ += 1
-                if x == _roll_Placement_:
-                    print("it was " + str(table[_table_place_]))
-                    table[_table_place_] = _rolls_[1]
-                    print("Now It's " + str(table[_table_place_]))
-                    placed_roll = True
-        else:
-            print("select an unassigned location")
+        while not placed_roll:  # Place First Roll.
+            print("Where would you like your first roll, a " + str(_rolls_[0]) + " to be placed? Help?")
+            if type_ == "link":
+                print(
+                    "Or G: the Wastebasket. You have " + str(10 - len(wastebasket)) + " slots left in the wastebasket")
+            _roll_Placement_ = input().upper()
+            if _roll_Placement_ in table:
+                _table_place_ = -1
+                for x in table:
+                    _table_place_ += 1
+                    if x == _roll_Placement_:
+                        print("it was " + str(table[_table_place_]))
+                        table[_table_place_] = _rolls_[0]
+                        print("Now It's " + str(table[_table_place_]))
+                        placed_roll = True
+            elif _roll_Placement_ == "help":
+                helper("rolling")
+            elif _roll_Placement_ == "G" and type_ == "link":
+                wastebasket.append(_roll_Placement_)
+                print(str(_rolls_[1]) + " has been placed in the wastebasket. You have " + str(
+                    10 - len(wastebasket)) + "slots left in the wastebasket")
+            else:
+                print("select an unassigned location")
+
+        if type_ == "search" or type_ == "link":  # Displays search or link table
+            display_table(table)
+        if type_ == "activate":  # Displays activation table, checks for matching boxes.
+            check_matching(table)
+            display_activate_table(table)
+        filled = table_full(table, type_)  # Checks to see if the table has been filled.
+        if filled:
+            if type_ == "Link":
+                print("The link is complete.")
+            if type_ == "activate":
+                print("The activation is complete.")
+            input("Press enter to continue")
+            return table
+
+        placed_roll = False  # Place Second Roll
+        while not placed_roll:
+            print("Where would you like your second roll, a " + str(_rolls_[1]) + " to be placed? Help?")
+            if type_ == "link":
+                print(
+                    "Or G: the Wastebasket. You have " + str(10 - len(wastebasket)) + " slots left in the wastebasket")
+            _roll_Placement_ = input().upper()
+            if _roll_Placement_ in table:
+                _table_place_ = -1
+                for x in table:
+                    _table_place_ += 1
+                    if x == _roll_Placement_:
+                        print("it was " + str(table[_table_place_]))
+                        table[_table_place_] = _rolls_[1]
+                        print("Now It's " + str(table[_table_place_]))
+                        placed_roll = True
+            elif _roll_Placement_ == "help":
+                helper("rolling")
+            elif _roll_Placement_ == "G" and type_ == "link":
+                wastebasket.append(_roll_Placement_)
+                print(str(_rolls_[1]) + " has been placed in the wastebasket. You have " + str(
+                    10 - len(wastebasket)) + " slots left in the wastebasket")
+                placed_roll = True
+            else:
+                print("select an unassigned location")
+        filled = table_full(table, type_)  # Checks to see if the table has been filled.
+        if filled:
+            if type_ == "Link":
+                print("The link is complete.")
+            if type_ == "activate":
+                print("The activation is complete.")
+            input("Press enter to continue")
+            return table
 
 
 def get_hit(deadly):
@@ -356,6 +393,7 @@ def get_hit(deadly):
     # Utilize these returns.
     global health
     global day
+    global status
     print(red("You've been hurt!"))
     health -= 1
 
@@ -364,6 +402,7 @@ def get_hit(deadly):
             health -= 1
             if health <= -1:
                 print("You have died.")
+                status = "dead"
                 return "dead"
             else:
                 print("You've taken " + str(deadly) + "damage")
@@ -378,6 +417,7 @@ def get_hit(deadly):
         print("While you've been unconscious, all your search progress has been reset.")
         for x in locations:
             x.exploreAttempt = 0
+            status = "unconscious"
         return "unconscious"
     print("You have " + str(health) + " health remaining")
     return None
@@ -386,29 +426,18 @@ def get_hit(deadly):
 def searching():
     """Searching minigame. Return result'"""
     _search_table = ["A", "B", "C", "D", "E", "F"]
-    _matching = ["A", "B", "C", "D", "E", "F"]
     _filled_table = False
 
-    while not _filled_table:
-        _is_there = []
-        display_table(_search_table)  # Display an amazing acii table.
-        rolls(_search_table, "search")  # rolls dice, places them.
-        # A very shitty way to make sure the whole table is filled in.
-        for x in _matching:
-            if x in _search_table:
-                _is_there.append(x)
-            print(_is_there)
-        if len(_is_there) == 0:
-            _filled_table = True
+    _search_table = rolls(_search_table, "search")  # rolls dice, places them.
+
     display_table(_search_table)
     _top_number = int(str(_search_table[0]) + str(_search_table[1]) + str(_search_table[2]))
     _bottom_number = int(str(_search_table[3]) + str(_search_table[4]) + str(_search_table[5]))
     search_result = _top_number - _bottom_number
-    # make this prettier!
     return search_result
 
 
-def location_desciption(_current_location):
+def location_description(_current_location):
     """Describe location: components, artifact, treasure, time advances, event"""
     print("Here you will find " + _current_location.component + ".")
     if _current_location.artifact in artifacts:
@@ -429,23 +458,40 @@ def location_desciption(_current_location):
     print(_descriptions[_current_location.event])  # This makes me feel so smart.
 
 
-# def list_objects(list, param):
+def table_full(_table, type):
+    """Check to see if the minigame table is full"""
+    if type == "activate":
+        _matching = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    else:
+        _matching = ["A", "B", "C", "D", "E", "F"]
+    _filled_table = False
+    _number = []
+    _is_there = []
+    for x in _matching:
+        if x in _table:
+            _is_there.append(x)
+    if len(_is_there) == 0:
+        return True
+    else:
+        return False
+
+
+# def list_objects(list, param): TODO: Implement this. Maybe. Not needed, but may be nice.
 # """Iterate through a list of objects for a specific parameter"""
-#    showItems = ""
+#    _show items = ""
 #    for x in list:
-#        if x.param == True:  #how do I make the attribute equal the argument?
-#            showItems += x.name
-#            showItems += ", "
-#    return showItems
+#        if x.param == True:  #how do I make the attribute equal the argument? A lambda?
+#            _show items += x.name
+#            _show items += ", "
+#    return _show items
 
 def check_inventory():
     """Print the player inventory. Check item properties"""
     print("You open your bag and see...")
-    # List Components
-    for x, y in stores.items():
+    for x, y in stores.items():  # List Components
         print(x, y)
-    # List Artifacts
-    _show_items = ""
+
+    _show_items = ""  # List Artifacts
     if len(artifacts) == 0:
         print("You have no artifacts")
     else:
@@ -453,9 +499,9 @@ def check_inventory():
             _show_items += x.name
             _show_items += ", "
         print("You have the following artifacts: " + _show_items + ".")  # fix formatting of last item
-    # list activated artifacts
+
     _show_items = ""
-    for x in artifacts:
+    for x in artifacts:  # list activated artifacts
         if x.activated:
             _show_items += x.name
             _show_items += ", "
@@ -464,14 +510,14 @@ def check_inventory():
     else:
         print("You have no activated artifacts")
     _show_items = ""
-    for x in artifacts:
-        if x.activated:
+    for x in artifacts:  # List linked artifacts
+        if x.linked:
             _show_items += x.name
             _show_items += ", "
     if _show_items != "":
-        print("You have the following activated artifacts: " + _show_items + ".")  # fix formatting of last item
+        print("You have the following linked artifacts: " + _show_items + ".")  # fix formatting of last item
     else:
-        print("You have no activated artifacts")
+        print("You have no linked artifacts")
     # List Treasures
     _show_items = ""
     if len(treasures) == 0:
@@ -489,9 +535,9 @@ def check_inventory():
         for x in toolbelt:
             _show_items += x
             _show_items += ", "
-        print("You have the following tools availible: " + _show_items + ".")  # fix formatting of last item
+        print("You have the following tools available: " + _show_items + ".")  # fix formatting of last item
     while True:
-        print("Actifact info? TreasureTool info? Or press enter to continue.")
+        print("Artifact info? TreasureTool info? Or press enter to continue.")
         _action = input().casefold()
         if "artifact" in _action:
             looking = True
@@ -529,7 +575,7 @@ def check_inventory():
                 for x in toolbelt:
                     _show_items += x
                     _show_items += ", "
-                print("You have the following tools availible: " + _show_items + ".")  # fix formatting of last item
+                print("You have the following tools available: " + _show_items + ".")  # fix formatting of last item
                 _action = input().casefold()
                 if "focus" in _action or "charm" in _action:  # Coulda done the number thing. Not as bad though.
                     print("The Focus Charm adds two energy points during activation")
@@ -549,7 +595,7 @@ def check_inventory():
                 for x in treasures:
                     _spam = + 1
                     print(str(_spam) + ". " + x.name)
-                print(str(len(treasures) + 1) + ". Nevermind.")
+                print(str(len(treasures) + 1) + ". Never mind.")
                 _where_to = input("which? ").casefold()
 
                 #  see if it's a number
@@ -570,10 +616,69 @@ def check_inventory():
 
 
 def linking(artifact):
+    """Searching minigame. Return table'"""
+    _search_table = ["A", "B", "C", "D", "E", "F"]
+    _number = []
+    _links = []
+    _negatives = 0
+    _link_value = 0
+
+    _search_table = rolls(_search_table, "link")  # rolls dice, places them.
+
+    display_table(_search_table)
+    _number = [int(_search_table[0]) - int(_search_table[3]), int(_search_table[1]) - int(_search_table[4]),
+               int(_search_table[2]) - int(_search_table[5])]
+    for x in _number:
+        if x >= 0:
+            print("Your result of " + str(x) + " is added to the link value.")
+            _links.append(x)
+        elif x < 0:
+            print("The negative result of " + str(x) + " has harmed you!")
+            _negatives += 1
+            get_hit(1)
+    if _negatives > 0:
+        print("Using " + artifact.component + " will make a negative link value 2.")
+        print("Otherwise, you must stop the link process. Your wastebasket is not emptied")
+        if _negatives > 1:
+            print("You have " + str(_negatives) + " negative results. It will take as many components")
+            print("1. Use Components")
+        elif _negatives == 1:
+            print("You have " + str(_negatives) + " negative result.")
+            print("1. Use Component")
+        print("2. Restart")
+        _action = input()
+        if _action == "1" and stores[artifact.component] >= _negatives:
+            for x in range(_negatives):
+                stores[artifact.component] -= 1
+            if _negatives > 1:
+                print("The negative values are now two")
+            elif _negatives == 1:
+                print("The negative value is now two")
+            for x in range(_negatives):
+                _links.append(2)
+        elif _action == "1" and stores[artifact.component] < _negatives:
+            print("You do not have enough components. You must stop.")
+            print("To try again you must get more " + artifact.component + ".")
+            return "failed"
+        elif _action == "2":
+            print("You end your attempt to link.")
+    for x in _links:
+        _link_value += x
+    return _link_value
+
+
+def link(artifact):
+    """Begin minigame and use component. Return the link value"""
+    link_value = 0
     """Link an artifact"""
-    print("lets link this bitch")
-    print(artifact.name)
-    link_value = 3
+    if stores.get(artifact.component) < 1:
+        print("You need at least one " + str(artifact.component) + " to link this artifact.")
+    else:
+        stores[artifact.component] -= 1
+        print("You use one " + artifact.component + " from your stores.")
+        print("You begin to link the " + artifact.name + ".")
+        link_value = linking(artifact)
+
     return link_value
 
 
@@ -586,8 +691,8 @@ def activate(_to_activate):
     print("The artifact  whirls as it processes the results.")
     for x in numbers:
         if x < 0:
-            print("The negaitve result causes the artifact to spark out of control!")
-            get_hit(1)
+            print("The negative result causes the artifact to spark out of control!")
+            get_hit(1)  # TODO: How do I back out of everything if the player dies or goes unconsciouss?
         elif x == 0:
             print("The artifact seems unimpressed with your result of 0.")
         else:
@@ -611,10 +716,10 @@ def activate(_to_activate):
     return energy
 
 
-def gods_hand(energy):
+def gods_hand(_energy):
     """Add extra energy to god's hand. Remove skull days"""
     global godsHand  # I'm not sure why this needs a global here, but something like skulldays does not.
-    godsHand += energy
+    godsHand += _energy
     if godsHand >= 3:
         while godsHand >= 3:
             print("The power in the God's Hand has delayed the end of days.")
@@ -624,31 +729,27 @@ def gods_hand(energy):
             godsHand -= 3
             print("The God's Hand has " + str(godsHand) + " energy remaining inside.")
     else:
+        print("The extra energy empowers the God's Hand")
         print("The Gods hand has " + str(godsHand) + " energy inside.")
-    print("With more " + str(3 - godsHand) + " energy, the God's Hand, it could push back the end of all things.")
+    print("With " + str(3 - godsHand) + " more energy, the God's Hand could push back the end of all things.")
+
+
+def check_matching(_search_table):
+    """Check to see if boxes below and above match"""
+    _matching = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    for x in range(0, int(len(_search_table) / 2)):
+        if _search_table[x] == _search_table[x + 4]:
+            print("the identical inputs cancel out, clearing their way.")
+            _search_table[x] = _matching[x]
+            _search_table[x + 4] = _matching[x + 4]
 
 
 def activating():
     """Play the activation minigame. """
     _search_table = ["A", "B", "C", "D", "E", "F", "G", "H"]
-    _matching = ["A", "B", "C", "D", "E", "F", "G", "H"]
-    _filled_table = False
 
-    while not _filled_table:
-        display_activate_table(_search_table)  # Display an amazing acii table.
-        rolls(_search_table, "activate")  # rolls dice, places them.
-        _is_there = []
-        for x in range(0, int(len(_search_table) / 2)):
-            if _search_table[x] == _search_table[x + 4]:
-                print("the identical inputs cancel out, clearing their way.")
-                _search_table[x] = _matching[x]
-                _search_table[x + 4] = _matching[x + 4]
-        for x in _matching:
-            if x in _search_table:
-                _is_there.append(x)
-        if len(_is_there) == 0:
-            _filled_table = True
-    display_activate_table(_search_table)
+    _search_table = rolls(_search_table, "activate")  # rolls dice, places them.
+
     numbers = [_search_table[0] - _search_table[4], _search_table[1] - _search_table[5],
                _search_table[2] - _search_table[6], _search_table[3] - _search_table[7]]
     print(numbers)
@@ -681,24 +782,31 @@ def activating():
 
 
 def lab():
-    """Allow player to activate an artifact, link an object or rest."""
-    # all the things you do in your lab. this is going to be a big boy someday.
+    """Allow player to activate an artifact, link an artifact or rest."""
     print("You arrive at your lab.")
     while True:
-        print("Would you like to Rest? Activate an artifact? Link an artifact? Check Inventory? "
-              "Leave? Do you need help?")
+        end_game()
+        print("""
+    Would you like to: 
+    1. Rest 
+    2. Activate an artifact 
+    3. Link an artifact 
+    4. Check Inventory?
+    5. Leave
+    6. Help
+              """)
         _action = input().casefold()
-        # Rest
-        if _action == "rest":
+        if _action == "rest" or _action == "1":  # TODO: Resting in lab
             print("You rest")
-        elif "check" in _action:
+
+        elif "check" in _action:  # Check inventory
             check_inventory()
-        elif _action == "activate" or _action == "activate an artifact":
+
+        elif _action == "activate" or _action == "activate an artifact" or _action == "2":  # Activate Artifact
             if len(artifacts) > 0:
-                print("Lets activate some bitches")
                 print("Which artifact would you like to activate?")
 
-                while True:
+                while True:  # List artifacts
                     _to_activate = []
                     for x in artifacts:
                         if not x.activated:
@@ -706,10 +814,10 @@ def lab():
                     num = 0
                     for x in _to_activate:
                         num += 1
-                        print(str(num) + ". " + x.name)
-                    print(str(len(_to_activate) + 1) + ". Nevermind, none for now.")
-                    print(str(len(_to_activate) + 2) + ". Help?")
-                    print(str(len(_to_activate) + 3) + ". Check Inventory")
+                        print("     " + str(num) + ". " + x.name)
+                    print("     " + str(len(_to_activate) + 1) + ". Nevermind, none for now.")
+                    print("     " + str(len(_to_activate) + 2) + ". Help?")
+                    print("     " + str(len(_to_activate) + 3) + ". Check Inventory")
                     _what_to = input("Which would you like to activate? ").casefold()
 
                     try:
@@ -721,13 +829,12 @@ def lab():
                         break
                     elif int(_what_to) == 2 + len(_to_activate):  # go to the help menu
                         helper("activate")  # This one might be ok.
-                    elif int(_what_to) == 3 + len(_to_activate):  # go to the help menu
+                    elif int(_what_to) == 3 + len(_to_activate):  # check inventory
                         check_inventory()
-                    elif 0 < int(_what_to) < len(_to_activate) + 1:  # go to the location
+                    elif 0 < int(_what_to) < len(_to_activate) + 1:  # select artifact
                         _to_activate = _to_activate[int(_what_to) - 1]
 
-                        # first attempt
-                        energy = activate(_to_activate)
+                        energy = activate(_to_activate)  # First attempt
 
                         #  second attempt. There's probably a better way do this,
                         #  but its max three times, so it's not TOO bad.
@@ -739,15 +846,28 @@ def lab():
                             input("Press enter to continue.")
                             energy = energy + activate(_to_activate)
 
-                            # third Auto success
-                            if energy < 4:
+                            if energy < 4:  # third Auto success
                                 print("With only " + str(energy) + " energy, you must continue on.")
                                 print("You work well into the night and into the next day.")
                                 day_advance()
                                 print("As the sun rises on your third attempt, you've got it!")
                                 input("Press enter to continue.")
                                 print(yellow(_to_activate.name + " has been activated!"))
-                                _to_activate.activated = True
+                                energy = 4
+
+                        if energy >= 4:  # Successful activation
+                            _index = 0
+                            for x in artifacts:
+                                if x.name == _to_activate.name:
+                                    break
+                                _index += 1
+                            print(artifacts[_index].name + " is now activated.")
+                            artifacts[_index].activated = True
+                            energy -= 4
+                            print(artifacts[_index].activated)
+                        if energy > 0:
+                            gods_hand(energy)
+
                         end_game()
                         break
 
@@ -756,21 +876,20 @@ def lab():
                 print("You have no artifacts to activate.")
 
         # Link
-        elif _action == "link" or _action == "link an artifact":
+        elif _action == "link" or _action == "link an artifact" or _action == "3":
             while True:
                 unlinked = []
                 for x in artifacts:
                     if not x.linked:
                         unlinked.append(x)
                 if len(unlinked) > 0:
-                    print("Lets link some bitches")
                     num = 0
                     for x in unlinked:
                         num += 1
-                        print(str(num) + ". " + x.name)
-                    print(str(len(unlinked) + 1) + ". Nevermind, none for now.")
-                    print(str(len(unlinked) + 2) + ". Help?")
-                    print(str(len(unlinked) + 3) + ". Check Inventory")
+                        print("     " + str(num) + ". " + x.name)
+                    print("     " + str(len(unlinked) + 1) + ". Nevermind, none for now.")
+                    print("     " + str(len(unlinked) + 2) + ". Help?")
+                    print("     " + str(len(unlinked) + 3) + ". Check Inventory")
                     _what_to = input("Which would you like to Link? ").casefold()
 
                     try:
@@ -781,22 +900,34 @@ def lab():
                     if int(_what_to) == 1 + len(unlinked):  # back out
                         break
                     elif int(_what_to) == 2 + len(unlinked):  # go to the help menu
-                        helper("link")  # This one might be ok.
+                        helper("link")
                     elif int(_what_to) == 3 + len(unlinked):  # go to the help menu
                         check_inventory()
                     elif 0 < int(_what_to) < len(unlinked) + 1:  # go to the location
                         _to_link = unlinked[int(_what_to) - 1]
 
                         # first (only) attempt
-                        link_value = linking(_to_link)
-                        print(link_value)
-                        end_game()
+                        # link_value = link(_to_link)
+                        link_value = 3
+                        _index = 0
+                        for x in artifacts:
+                            if x.name == _to_link.name:
+                                break
+                            _index += 1
+                        print(artifacts[_index].name + " is now linked with a link value of " + str(link_value) + ".")
+                        artifacts[_index].linked = True
+                        artifacts[_index].link_value = link_value
+                        print(artifacts[_index].linked)
+                        print(artifacts[_index].link_value)
 
                 else:
                     print("You have no artifacts to link.")
-        elif _action == "leave":
+                    break
+        elif _action == "check" or _action == "4":
+            check_inventory()
+        elif _action == "leave" or _action == "5":
             break
-        elif _action == "help":
+        elif _action == "help" or _action == "6":
             helper("lab")
         else:
             print("Please enter a valid response")
@@ -810,16 +941,87 @@ def end_game():
             completed.append(x.name)
         print("The following artifacts have been linked and activated:")
         print(completed)
-        if len(completed) == 6:
+        if len(completed) == 1:
             print("You've done it! All the artifacts are active and linked!")
             print("It's time to activate")
             print(red("THE UTOPIA ENGINE"))
+            final_activation()
+
+
+def final_activation():
+    global health
+    while True:
+        utopia = 0
+        utopia_mod = 0
+        for x in artifacts:
+            utopia += x.link_value
+        print("The difficulty of starting the utopia engine is " + str(utopia) + ".")
+        print("You have " + str(health) + " health remaining and " + str(skullDays[0] - day) + " days until doomsday")
+        print("""
+            Would you like to: 
+            1. Rest 
+            2. Activate the Utopia Engine
+            3. Help
+            """)
+        _action = input().casefold()
+        if _action == "rest" or _action == "1":  # TODO: Resting in final activation
+            print("You rest")
+        elif _action == "activate" or _action == "2":
+            print("You may sacrifice health to make the engine easier to start. You may even bring yourself to zero "
+                  "health")
+            print("Beware however. Doing say will mean failure is death.")
+            print("Would you like to 1: sacrifice health or 2: Get on with it. 3. Cancel")
+            _action = input().casefold()
+            if _action == "1" or _action == "sacrifice":
+                # Here's a thought: I could have saved these inputs ans ints
+                # and used a try/ except for a value error to make sure it was a number
+                print("How much life? You have " + str(health) + " health remaining.")
+                while True:
+                    _sacrifice = input().casefold()
+                    if health - int(_sacrifice) >= 0:
+                        health -= int(_sacrifice)
+                        utopia_mod = int(_sacrifice)
+                        break
+                    else:
+                        print("please enter a number less than your health.")
+            if _action == "1" or _action == "sacrifice" or _action == "2":
+                print("Here we go.")
+                utopia -= utopia_mod
+                _rolls_ = [random.randint(1, 6), random.randint(1, 6)]
+                input("Press Enter to roll your first die.")
+                print("Your first roll is a " + str(_rolls_[0]) + ".")
+                input("Press Enter to roll your second die.")
+                input("Your die teeters on the edge")
+                input("It falls on a number")
+                print("A " + str(_rolls_[1]) + ".")
+                _total = _rolls_[0] = _rolls_[1]
+                print("Your roll total is " + str(_total) + ".")
+                print("The utopias difficulty is " + str(utopia) + "...")
+                if _total >= utopia:  # TODO: Make winning cooler, kick back to main menu.
+                    print("You win. Whatever.")
+                    scoring()
+                    input()
+                else:
+                    print(red("YOU HAVE FAILED"))
+                    print("You slump at your table, shocked by the energy coming forth from the artifacts.")
+                    get_hit(1)
+                    day_advance()
+                    print("You wake you back in your lab the next day. You must try again.")
+            elif _action == "3" or _action == "cancel":
+                continue
+        elif _action == "help" or _action == "3":
+            helper("utopia")
+        else:
+            print("Please input a valid response")
+
+
+def scoring():  # TODO: Make scoring happen.
+    print("Your score is BLANK")
 
 
 def search(_current_location):
     """Search specified location. Give loot or encounter based of result"""
-    print("Day " + str(day))  # Just here for testing sanity
-    print("explore attempt " + str(_current_location.exploreAttempt))  # Ditto
+    global status
     if _current_location.exploreAttempt == 0:  # Check if player has been here.
         print("You begin your search of " + _current_location.name)
     else:
@@ -848,14 +1050,15 @@ def search(_current_location):
     if 11 < _search_result < 100:  # Component result
         print("You find component " + _current_location.component + ".")
         if stores[_current_location.component] == 4:
-            print(green("Your stores of " + str(stores[_current_location.component]) + " is already full with 4 pieces."))
+            print(
+                green("Your stores of " + str(stores[_current_location.component]) + " is already full with 4 pieces."))
         else:
             stores[_current_location.component] = stores[_current_location.component] + 1
             print(
-                green("You now have " + str(stores[_current_location.component]) + " " + _current_location.component + "."))
+                green("You now have " + str(
+                    stores[_current_location.component]) + " " + _current_location.component + "."))
 
-    # Inactive Artifact result
-    if 11 > _search_result >= 1:
+    if 11 > _search_result >= 1:  # Inactive Artifact result
         if _current_location.artifact.name not in artifacts:
             print(green("You find an inactive " + _current_location.artifact.name + "!"))
             artifacts.append(_current_location.artifact)
@@ -863,8 +1066,7 @@ def search(_current_location):
         else:
             print(green("You again find where " + _current_location.artifact.name + " once lay."))
 
-    # active artifact result
-    if _search_result == 0:
+    if _search_result == 0:  # active artifact result
         if _current_location.Artifact not in [artifacts]:
             print("You find " + _current_location.Artifact.name + " already activated!")
             _current_location.artifact.activated = True
@@ -873,12 +1075,9 @@ def search(_current_location):
         else:
             print("You again find where " + _current_location.artifact.name + " once lay.")
 
-    # Monster! Go to encounter function.
-    if _search_result < 0 or _search_result > 99:
+    if _search_result < 0 or _search_result > 99:  # Monster! Go to encounter function.
         print("You encounter a monster!")
-        encounter(_current_location, _search_result)
-
-    # print (currentLocation.timeAdvances)
+        status = encounter(_current_location, _search_result)
 
 
 def camp(_current_location):
@@ -888,7 +1087,7 @@ def camp(_current_location):
     if health < 6:
         health += 1
         print("You feel a little better.")
-        print("You spend the night under the stars of " +_current_location.name + ".")
+        print("You spend the night under the stars of " + _current_location.name + ".")
         print("Your health is " + str(health))
         day_advance()
     else:
@@ -899,12 +1098,12 @@ def explore():
     """Declare which location is to be searched. Give information about locations"""
     # player decides where they want to explore. gives info on location.
     while True:
-        print("Where would you like to explore?")
+        print("     " + "Where would you like to explore?")
         for x in locations:
-            print(str(x.number) + ". " + x.name)
-        print(str(len(locations) + 1) + ". Nevermind, Back to the lab")
-        print(str(len(locations) + 2) + ". Help?")
-        print(str(len(locations) + 3) + ". Check Inventory")
+            print("     " + str(x.number) + ". " + x.name)
+        print("     " + str(len(locations) + 1) + ". Check Inventory")
+        print("     " + str(len(locations) + 2) + ". Help?")
+        print("     " + str(len(locations) + 3) + ". Main Menu")
         _where_to = input("Where to? ").casefold()
         try:  # See if it's a number
             int(_where_to) + 1
@@ -913,26 +1112,25 @@ def explore():
             continue
 
         if int(_where_to) == 1 + len(locations):  # go to the lab
-            return "lab"  # I'm not too sure about this.
+            check_inventory()
         elif int(_where_to) == 2 + len(locations):  # go to the help menu
             helper("exploring")  # This one might be ok.
         elif int(_where_to) == 3 + len(locations):  # go to the help menu
-            check_inventory()
+            return None
         elif 0 < int(_where_to) < len(locations) + 1:  # go to the location
 
             _current_location = locations[int(_where_to) - 1]
 
-            while True:
+            while True:  # First search attempt
                 print("You arrive at " + _current_location.name + ".")
-                location_desciption(_current_location)
+                location_description(_current_location)
                 print("Would you like to search or leave?")
                 _action = input().casefold()
                 if _action == "leave":
                     break
                 if _action == "search":
                     search(_current_location)
-                    # sees if the explore attempt advances the timeline.
-                    if _current_location.exploreAttempt in _current_location.timeAdvances:
+                    if _current_location.exploreAttempt in _current_location.timeAdvances:  # Sees if the explore attempt advances the timeline.
                         day_advance()
                         if _current_location.event == 4:  # Advances another day if bad weather
                             print("The bad weather made searching take a very long time.")
@@ -940,8 +1138,8 @@ def explore():
                         print("You're exploration took all day.")
                     _current_location.exploreAttempt += 1
 
-                    continue_search = True
-                    while continue_search:  # Allows player to continue search, camp or exit
+                    continue_search = True  # Allows player to continue search, camp or exit
+                    while continue_search:
                         print("---------------------------------")
                         print("Day " + str(day))
                         print("Explore attempt " + str(_current_location.exploreAttempt))
@@ -955,6 +1153,9 @@ def explore():
                             if _current_location.exploreAttempt in _current_location.timeAdvances:
                                 day_advance()
                                 print("You're exploration took all day.")
+                                if _current_location.event == 4:  # Advances another day if bad weather
+                                    print("The bad weather made searching take a very long time.")
+                                    day_advance()
                             _current_location.exploreAttempt += 1
                             # player finds artifacts after 6 attempts
                             if _current_location.exploreAttempt == 6 and _current_location.artifact not in artifacts:
@@ -968,7 +1169,7 @@ def explore():
                         elif _action == "help":
                             helper("search")
                         elif _action == "info":
-                            location_desciption(_current_location)
+                            location_description(_current_location)
                         elif _action == "check" or _action == "check inventory":
                             check_inventory()
                         else:
@@ -988,42 +1189,74 @@ def explore():
 def mainloop():
     """Allow player to choose what to do."""
     print("The end is coming unless you can build the Utopia Engine to stop it.")
-    while True:
+    while status == "alive":
         print("It is day " + str(day) + " of your adventure.")
         print(red("There are " + str(skullDays[0] - day) + " days until the end of the world."))
-        print("What would you like to do? Explore? Check inventory? Go to the lab? Help?")
+        print("     What would you like to do?")
+        print("     1. Explore a location")
+        print("     2. Go to the lab")
+        print("     3. Check your inventory?")
+        print("     4. Help")
+        print("     5. Save Game")  # TODO create save function
+        print("     6. Exit Game")
         _action = input().casefold()
 
-        if _action == "explore":
-            _exit_reason = explore()
-            if _exit_reason == "lab":
-                lab()
-        elif _action == "check inventory" or _action == "check" or _action == "inventory":
-            check_inventory()
-        elif _action == "go to the lab" or _action == "lab":
+        if "explore" in _action or "1" in _action:
+            explore()
+        elif "lab" in _action or "2" in _action:
             lab()
-        elif _action == "help":
+        elif "check" in _action or "3" in _action:
+            check_inventory()
+        elif "help" in _action or "4" in _action:
             helper("main")
+        elif "save" in _action or "5" in _action:
+            # Save function
+            continue
+        elif "exit" in _action or "6" in _action:
+            return None
         else:
             print("command Not Recognized")
+    if status == "dead":
+        print("farts man, that sucks.")  # TODO make scoring function. add statistics.
+    if status == "unconscious":
+        print("I'm not sure how to kick back to the main while loop from here, but it should.")
+        print("or something similar.")
 
 
-# It'd be cool be be able to stop and continue a game, but I have NO IDEA how that works yet.
-# Also would be neat to have stats from each game "times explored," "times activated" and stuff
 while True:
-    print("Menu:")
-    print("1. New game")
-    print("2. Guide")
+    print("     Menu:")
+    print("     1. New game")
+    print("     2. Continue saved game")
+    print("     3. Guide")
+    print("     4. Statistics")
+    print("     5. exit")
     action = input().casefold()
     if action == "1":
         # I could make a function that returns everything to starting values for repeat games.
         mainloop()
     elif action == "2":
-        helper("start")
+        print("Someday, maybe.")  # TODO: Make load game
+    elif action == "3":
+        helper("guide")
+    elif action == "4":
+        print("There tharr be statistics")  # TODO: Make statistics
+    elif action == "5":
+        sys.exit()
     else:
         print("Please input a number")
+    print()
+    print(blue("""
+        ##     ## ########  #######  ########  ####    ###       ######## ##    ##  ######   #### ##    ## ########
+        ##     ##    ##    ##     ## ##     ##  ##    ## ##      ##       ###   ## ##    ##   ##  ###   ## ##      
+        ##     ##    ##    ##     ## ##     ##  ##   ##   ##     ##       ####  ## ##         ##  ####  ## ##      
+        ##     ##    ##    ##     ## ########   ##  ##     ##    ######   ## ## ## ##   ####  ##  ## ## ## ######  
+        ##     ##    ##    ##     ## ##         ##  #########    ##       ##  #### ##    ##   ##  ##  #### ##      
+        ##     ##    ##    ##     ## ##         ##  ##     ##    ##       ##   ### ##    ##   ##  ##   ### ##
+         #######     ##     #######  ##        #### ##     ##    ######## ##    ##  ######   #### ##    ## ########
+         """))
+    print()
 
-# things I'm concerned about:
-# adding what the items do will be interesting. I guess a lot of if/ then stuff.
-# add item functionality
-# fix gethit events and stuff
+# TODO: Item effects
+# TODO: Make all menus numbered
+# TODO: General UX improvements
+# TODO: Remove herobrine
