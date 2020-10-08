@@ -1,5 +1,6 @@
 import random
 import sys
+import json
 
 # text color
 black = lambda text: '\033[0;30m' + text + '\033[0m'
@@ -103,7 +104,7 @@ scaleOfTheInfinityWurm = Treasure("Scale of the Infinity Wurm", "The ebony scale
 theAncientRecord = Treasure("The Ancient Record", "The dusty tome allows you to change one", False)
 theMoltenShard = Treasure("The Molten Shard", "This glowing spike adds 1 to your attack range", False)
 
-treasures = []
+treasures = [icePlate]
 
 
 # Artifacts
@@ -403,6 +404,7 @@ def get_hit(deadly):
             if health <= -1:
                 print("You have died.")
                 status = "dead"
+                scoring()
                 return "dead"
             else:
                 print("You've taken " + str(deadly) + "damage")
@@ -480,7 +482,7 @@ def table_full(_table, type):
 # """Iterate through a list of objects for a specific parameter"""
 #    _show items = ""
 #    for x in list:
-#        if x.param == True:  #how do I make the attribute equal the argument? A lambda?
+#        if x.param == True:  #how do I make the attribute equal the argument?
 #            _show items += x.name
 #            _show items += ", "
 #    return _show items
@@ -1197,7 +1199,7 @@ def mainloop():
         print("     2. Go to the lab")
         print("     3. Check your inventory?")
         print("     4. Help")
-        print("     5. Save Game")  # TODO create save function
+        print("     5. Save Game")
         print("     6. Exit Game")
         _action = input().casefold()
 
@@ -1209,8 +1211,28 @@ def mainloop():
             check_inventory()
         elif "help" in _action or "4" in _action:
             helper("main")
-        elif "save" in _action or "5" in _action:
-            # Save function
+        elif "save" in _action or "5" in _action:  # I can't believe I got this to work.
+            save = [day, health, toolbelt, stores, eventDays, skullDays, wastebasket, godsHand, status]
+            for x in locations:
+                save.append(x.exploreAttempt)
+            _add = []
+            for x in artifacts:
+                _add.append(x.name)
+                _add.append(x.activated)
+                _add.append(x.linked)
+                _add.append(x.link_value)
+                save.append(_add)
+                _add = []
+            _add = []
+            for x in treasures:
+                _add.append(x.name)
+                _add.append(x.used)
+                save.append(_add)
+                _add = []
+            json_object = json.dumps(save)
+            with open("UtopiaSave.json", "w") as outfile:
+                outfile.write(json_object)
+            print(json_object)
             continue
         elif "exit" in _action or "6" in _action:
             return None
@@ -1233,9 +1255,38 @@ while True:
     action = input().casefold()
     if action == "1":
         # I could make a function that returns everything to starting values for repeat games.
-        mainloop()
-    elif action == "2":
-        print("Someday, maybe.")  # TODO: Make load game
+        mainloop()  # Does this even need to be a function?
+    elif action == "2":  # TODO: Figure out how to load artifacts/ treasure.
+        f = open('UtopiaSave.json')
+        data = json.load(f)
+        day = data[0]
+        health = data[1]
+        toolbelt = data[2]
+        stores = data[3]
+        eventDays = data[4]
+        skullDays = data[5]
+        wastebasket = data[6]
+        godsHand = data[7]
+        status = data[8]
+        for x in range(0,5):
+            locations[x].exploreAttempt = data[x+9]  # This will mess us up if I add more things to save.
+        is_artifact = []
+        is_treasure = []
+        for x in range(16,len(data)):
+            # Idea here is that an artifact in this json will have 4 things: name, activation, link and link value.
+            if len(data[x]) == 4:
+                print(x)  # I really need to learn to use assert instead of printing randomly.
+                is_artifact.append(x)  # And then add it's position in the data list to is_artifact to call later.
+            elif len(data[x]) == 2:
+                print(x)
+                is_treasure.append(x)  # Same sorta thing here. Treasures should have a length os 2: name and used.
+        print(is_treasure)
+        print(is_artifact)  # TODO: match with class object, add to respective inventories.
+
+        # We'll have to match the string of the name value to the artifact/ treasure
+        # to figure out which it is and add it, which sucks. There HAS to be a better way to do that.
+
+
     elif action == "3":
         helper("guide")
     elif action == "4":
